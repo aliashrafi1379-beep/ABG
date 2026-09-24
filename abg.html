@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تحلیل جامع ABG</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #0f172a);
+            --card-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+            --text-color: var(--tg-theme-text-color, #f8fafc);
+            --hint-color: var(--tg-theme-hint-color, #94a3b8);
+            --accent-color: var(--tg-theme-button-color, #38bdf8);
+            --btn-text: var(--tg-theme-button-text-color, #0f172a);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --danger-color: #f43f5e;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 16px;
+            padding-bottom: 90px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--hint-color);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .segment-control {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px;
+            border-radius: 12px;
+        }
+
+        .segment-btn {
+            background: transparent;
+            border: none;
+            color: var(--hint-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .segment-btn.active {
+            background: var(--accent-color);
+            color: var(--btn-text);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--hint-color);
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+            direction: ltr;
+            text-align: right;
+        }
+
+        input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .toggle-expert {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: var(--border-color);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .expert-fields {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .expert-fields.open {
+            display: block;
+        }
+
+        .btn-calc {
+            width: 100%;
+            background: var(--accent-color);
+            color: var(--btn-text);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-info {
+            width: 100%;
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        #resultArea {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tag-banner {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tag-banner.acid {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: var(--danger-color);
+        }
+
+        .tag-banner.alk {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            margin-bottom: 6px;
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .result-detail-line {
+            font-size: 0.85rem;
+            margin-top: 6px;
+            color: var(--hint-color);
+        }
+
+        .reason-box {
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-top: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        .reason-box p {
+            margin-bottom: 6px;
+        }
+
+        /* استایل پنجره تفسیری پاپ‌آپ / Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-sheet {
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 550px;
+            max-height: 85vh;
+            border-radius: 20px 20px 0 0;
+            padding: 20px 16px;
+            overflow-y: auto;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.25s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--hint-color);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .alert-card {
+            background: rgba(244, 63, 94, 0.12);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .alert-card.warning {
+            background: rgba(245, 158, 11, 0.12);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .alert-card.info {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .alert-card h4 {
+            font-size: 0.92rem;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🩺 آنالیز گازهای خون شریانی (ABG)</h1>
+    </div>
+
+    <!-- تنظیمات مرجع -->
+    <div class="card">
+        <div class="section-title">مشخصات نمونه</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="segment-control" id="ageSegment">
+                <button class="segment-btn active" data-val="adult_child">🧑‍🦱 بزرگسال / اطفال</button>
+                <button class="segment-btn" data-val="neonate">👶 نوزاد / شیرخوار</button>
+            </div>
+            <div class="segment-control" id="sampleSegment">
+                <button class="segment-btn active" data-val="arterial">🩸 شریانی (ABG)</button>
+                <button class="segment-btn" data-val="venous">💉 وریدی (VBG)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- فرم ورودی پارامترها -->
+    <div class="card">
+        <div class="section-title">پارامترهای پایه</div>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>pH</label>
+                <input type="number" step="0.01" id="ph" placeholder="7.40">
+            </div>
+            <div class="form-group">
+                <label>pCO2 (mmHg)</label>
+                <input type="number" step="0.1" id="pco2" placeholder="40">
+            </div>
+            <div class="form-group full-width">
+                <label>HCO3 (mmol/L)</label>
+                <input type="number" step="0.1" id="hco3" placeholder="24">
+            </div>
+        </div>
+
+        <div class="toggle-expert" style="margin-top: 16px;">
+            <span style="font-size: 0.9rem; font-weight: 600;">🧬 پنل پیشرفته (الکترولیت، گپ، PO2)</span>
+            <label class="switch">
+                <input type="checkbox" id="expertToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="expert-fields" id="expertFields">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>PO2 (mmHg)</label>
+                    <input type="number" step="0.1" id="po2" placeholder="اختیاری">
+                </div>
+                <div class="form-group">
+                    <label>FiO2 (%)</label>
+                    <input type="number" step="1" id="fio2" placeholder="21">
+                </div>
+                <div class="form-group">
+                    <label>Na (mEq/L)</label>
+                    <input type="number" step="0.1" id="na" placeholder="140">
+                </div>
+                <div class="form-group">
+                    <label>Cl (mEq/L)</label>
+                    <input type="number" step="0.1" id="cl" placeholder="104">
+                </div>
+                <div class="form-group">
+                    <label>Albumin (g/dL)</label>
+                    <input type="number" step="0.1" id="alb" placeholder="4.0">
+                </div>
+                <div class="form-group">
+                    <label>K (mEq/L)</label>
+                    <input type="number" step="0.1" id="k" placeholder="4.0">
+                </div>
+                <div class="form-group full-width">
+                    <label>Glucose (mmol/L)</label>
+                    <input type="number" step="0.1" id="glucose" placeholder="mg/dL ÷ 18">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-calc" onclick="calculateABG()">🔍 پردازش و تحلیل کارنامه</button>
+    </div>
+
+    <!-- کارت نتایج -->
+    <div id="resultArea" class="card">
+        <div id="statusBanner" class="tag-banner">
+            <span class="badge" id="compBadge">وضعیت جبران</span>
+            <div class="result-title" id="primaryDisorder">تشخیص بالینی</div>
+            <div class="result-detail-line" id="metricsSummary"></div>
+        </div>
+
+        <div id="expertCalcBlock" style="display: none; margin-bottom: 12px;">
+            <div class="section-title">محاسبات اختصاصی و شکاف آنیونی</div>
+            <div class="reason-box" id="agAnalysis"></div>
+            <!-- دکمه باز کردن پنجره تفسیر بالینی -->
+            <button class="btn-info" onclick="openInterpretModal()">💡 تفسیر بالینی و مفهوم این اعداد چیست؟</button>
+        </div>
+
+        <div class="section-title">استدلال فیزیولوژیک (وینتر و قوانین تنفسی)</div>
+        <div class="reason-box" id="stepReasoning"></div>
+    </div>
+
+    <!-- پنجره پاپ‌آپ تفسیر بالینی (Modal / Bottom Sheet) -->
+    <div id="interpretModal" class="modal-overlay" onclick="closeInterpretModal(event)">
+        <div class="modal-sheet" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">🩺 تفسیر بالینی و پاتوفیزیولوژی</div>
+                <button class="modal-close" onclick="closeInterpretModal()">&times;</button>
+            </div>
+            <div id="modalContent"></div>
+            <button class="btn-calc" style="margin-top: 14px; padding: 10px;" onclick="closeInterpretModal()">متوجه شدم</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        // سوئیچ تب‌ها
+        document.querySelectorAll('.segment-control').forEach(ctrl => {
+            ctrl.addEventListener('click', (e) => {
+                if (e.target.classList.contains('segment-btn')) {
+                    ctrl.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                }
+            });
+        });
+
+        // سوئیچ فیلدهای پیشرفته
+        const toggle = document.getElementById('expertToggle');
+        const expertFields = document.getElementById('expertFields');
+        toggle.addEventListener('change', () => {
+            expertFields.classList.toggle('open', toggle.checked);
+        });
+
+        // شیء ذخیره اطلاعات تفسیری فعلی برای پنجره پاپ‌آپ
+        let currentInterpretation = null;
+
+        function calculateABG() {
+            const ph = parseFloat(document.getElementById('ph').value);
+            const pco2 = parseFloat(document.getElementById('pco2').value);
+            const hco3 = parseFloat(document.getElementById('hco3').value);
+
+            if (isNaN(ph) || isNaN(pco2) || isNaN(hco3)) {
+                if (tg && tg.showAlert) tg.showAlert("لطفاً مقادیر اولیه (pH, pCO2, HCO3) را وارد نمایید.");
+                else alert("لطفاً مقادیر اولیه (pH, pCO2, HCO3) را وارد نمایید.");
+                return;
+            }
+
+            let disorders = [];
+            let reasoning = [];
+            let comp_status = "";
+
+            const is_acid = ph < 7.35;
+            const is_alk = ph > 7.45;
+            const is_normal_ph = ph >= 7.35 && ph <= 7.45;
+
+            if (is_acid) reasoning.push(`• مقدار pH (${ph}) < 7.35 ⬅️ <b>اسیدمی</b>.`);
+            else if (is_alk) reasoning.push(`• مقدار pH (${ph}) > 7.45 ⬅️ <b>آلکالمی</b>.`);
+            else reasoning.push(`• مقدار pH (${ph}) در بازه نرمال (جبران کامل یا وضعیت پایدار).`);
+
+            let primary_acid = ph < 7.40;
+            let primary_alk = ph > 7.40;
+            if (ph === 7.40) {
+                if (pco2 > 40) primary_acid = true;
+                else if (pco2 < 40) primary_alk = true;
+            }
+
+            if (primary_acid) {
+                if (hco3 < 24 && pco2 > 40) {
+                    disorders.push("اسیدوز متابولیک و تنفسی توأم (Mixed Acidosis)");
+                    comp_status = "ترکیبی (Mixed)";
+                    reasoning.push("• هر دو عامل pCO2 و HCO3 در جهت تشدید اسیدوز عمل می‌کنند.");
+                } else if (hco3 < 24) {
+                    disorders.push("اسیدوز متابولیک");
+                    reasoning.push(`• کاهش HCO3 به ${hco3} عامل اولیه است.`);
+                    const exp_pco2 = (1.5 * hco3) + 8;
+                    reasoning.push(`• <b>فرمول وینتر:</b> pCO2 مورد انتظار = ${(exp_pco2 - 2).toFixed(1)} تا ${(exp_pco2 + 2).toFixed(1)}`);
+
+                    if (pco2 > exp_pco2 + 2) {
+                        disorders.push("اسیدوز تنفسی همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                        reasoning.push(`└ pCO2 (${pco2}) بیشتر از بازه وینتر است ⬅️ اسیدوز تنفسی توأم.`);
+                    } else if (pco2 < exp_pco2 - 2) {
+                        disorders.push("آلکالوز تنفسی همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                        reasoning.push(`└ pCO2 (${pco2}) کمتر از بازه وینتر است ⬅️ آلکالوز تنفسی توأم.`);
+                    } else {
+                        comp_status = is_normal_ph ? "جبران کامل" : "جبران تنفسی مناسب";
+                        reasoning.push("└ جبران تنفسی مناسب بر اساس فرمول وینتر برقرار است.");
+                    }
+                } else if (pco2 > 40) {
+                    disorders.push("اسیدوز تنفسی");
+                    reasoning.push(`• احتباس pCO2 (${pco2}) عامل اولیه اسیدوز است.`);
+                    const delta_pco2 = (pco2 - 40) / 10;
+                    const acute_hco3 = 24 + (delta_pco2 * 1);
+                    const chronic_hco3 = 24 + (delta_pco2 * 4);
+                    reasoning.push(`• <b>قانون ۱ و ۴:</b> بیوکربنات مورد انتظار: حاد ~${acute_hco3.toFixed(1)} | مزمن ~${chronic_hco3.toFixed(1)}`);
+
+                    if (hco3 < acute_hco3 - 2) {
+                        disorders.push("اسیدوز متابولیک همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else if (hco3 > chronic_hco3 + 2) {
+                        disorders.push("آلکالوز متابولیک همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else {
+                        const is_acute = Math.abs(hco3 - acute_hco3) < Math.abs(hco3 - chronic_hco3);
+                        comp_status = is_acute ? "جبران حاد" : "جبران مزمن";
+                    }
+                }
+            } else if (primary_alk) {
+                if (hco3 > 24 && pco2 < 40) {
+                    disorders.push("آلکالوز متابولیک و تنفسی توأم (Mixed Alkalosis)");
+                    comp_status = "ترکیبی (Mixed)";
+                } else if (hco3 > 24) {
+                    disorders.push("آلکالوز متابولیک");
+                    const exp_pco2 = (0.7 * hco3) + 20;
+                    reasoning.push(`• <b>فرمول جبرانی:</b> pCO2 مورد انتظار = ${(exp_pco2 - 5).toFixed(1)} تا ${(exp_pco2 + 5).toFixed(1)}`);
+
+                    if (pco2 > exp_pco2 + 5) {
+                        disorders.push("اسیدوز تنفسی همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else if (pco2 < exp_pco2 - 5) {
+                        disorders.push("آلکالوز تنفسی همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else {
+                        comp_status = is_normal_ph ? "جبران کامل" : "جبران مناسب";
+                    }
+                } else if (pco2 < 40) {
+                    disorders.push("آلکالوز تنفسی");
+                    const delta_pco2 = (40 - pco2) / 10;
+                    const acute_hco3 = 24 - (delta_pco2 * 2);
+                    const chronic_hco3 = 24 - (delta_pco2 * 5);
+                    reasoning.push(`• <b>قانون ۲ و ۵:</b> بیوکربنات مورد انتظار: حاد ~${acute_hco3.toFixed(1)} | مزمن ~${chronic_hco3.toFixed(1)}`);
+
+                    if (hco3 < chronic_hco3 - 2) {
+                        disorders.push("اسیدوز متابولیک همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else if (hco3 > acute_hco3 + 2) {
+                        disorders.push("آلکالوز متابولیک همزمان");
+                        comp_status = "ترکیبی (Mixed)";
+                    } else {
+                        const is_acute = Math.abs(hco3 - acute_hco3) < Math.abs(hco3 - chronic_hco3);
+                        comp_status = is_acute ? "جبران حاد" : "جبران مزمن";
+                    }
+                }
+            }
+
+            if (disorders.length === 0) {
+                disorders.push("نرمال (طبیعی)");
+                comp_status = "طبیعی";
+            }
+
+            // فیلدهای پنل تخصصی
+            const na = parseFloat(document.getElementById('na').value);
+            const cl = parseFloat(document.getElementById('cl').value);
+            const alb = parseFloat(document.getElementById('alb').value) || 4.0;
+            const k = parseFloat(document.getElementById('k').value);
+            const gluc = parseFloat(document.getElementById('glucose').value);
+
+            let expertHTML = [];
+            currentInterpretation = { ph, ag: null, corr_ag: null, delta_ratio: null, corr_k: null, corr_na: null };
+
+            if (!isNaN(na) && !isNaN(cl)) {
+                const ag = na - cl - hco3;
+                const corr_ag = ag + 2.5 * (4.0 - alb);
+                currentInterpretation.ag = ag;
+                currentInterpretation.corr_ag = corr_ag;
+
+                expertHTML.push(`<p>• <b>آنیون گپ خام:</b> ${ag.toFixed(1)} | <b>اصلاح شده با آلبومین:</b> ${corr_ag.toFixed(1)}</p>`);
+
+                if (corr_ag > 12.0) {
+                    const delta_ag = corr_ag - 12.0;
+                    const delta_hco3 = 24.0 - hco3;
+                    if (delta_hco3 > 0) {
+                        const ratio = delta_ag / delta_hco3;
+                        currentInterpretation.delta_ratio = ratio;
+                        expertHTML.push(`<p>• <b>نسبت دلتا (Delta Ratio):</b> ${ratio.toFixed(2)}</p>`);
+                        if (ratio < 0.4) expertHTML.push(`<p>└ Pure NAGMA (اسیدوز گپ نرمال خالص)</p>`);
+                        else if (ratio <= 0.8) expertHTML.push(`<p>└ ترکیب HAGMA + NAGMA</p>`);
+                        else if (ratio <= 2.0) expertHTML.push(`<p>└ Pure HAGMA (کتواسیدوز، لاکتیک اسیدوز، اورمی)</p>`);
+                        else expertHTML.push(`<p>└ HAGMA همراه با آلکالوز متابولیک</p>`);
+                    }
+                } else if (hco3 < 22) {
+                    expertHTML.push(`<p>└ شکاف نرمال: NAGMA (اتیولوژی: اسهال، سالین زیاد، RTA)</p>`);
+                }
+            }
+
+            if (!isNaN(k)) {
+                const corr_k = k - 0.6 * ((7.4 - ph) / 0.1);
+                currentInterpretation.corr_k = corr_k;
+                expertHTML.push(`<p>• <b>پتاسیم اصلاح‌شده با pH:</b> ${corr_k.toFixed(2)} mEq/L</p>`);
+            }
+            if (!isNaN(na) && !isNaN(gluc)) {
+                const corr_na = na + 1.5 * ((gluc - 5.5) / 5.5);
+                currentInterpretation.corr_na = corr_na;
+                expertHTML.push(`<p>• <b>سدیم اصلاح‌شده با قند:</b> ${corr_na.toFixed(1)} mEq/L</p>`);
+            }
+
+            // رندر نتایج روی UI
+            const banner = document.getElementById('statusBanner');
+            banner.className = 'tag-banner ' + (is_acid ? 'acid' : (is_alk ? 'alk' : ''));
+            
+            document.getElementById('compBadge').innerText = comp_status || "نامشخص";
+            document.getElementById('primaryDisorder').innerText = [...new Set(disorders)].join(" + ");
+            document.getElementById('metricsSummary').innerText = `pH: ${ph} | pCO2: ${pco2} | HCO3: ${hco3}`;
+            
+            document.getElementById('stepReasoning').innerHTML = reasoning.map(r => `<p>${r}</p>`).join("");
+
+            const expBlock = document.getElementById('expertCalcBlock');
+            if (expertHTML.length > 0) {
+                expBlock.style.display = "block";
+                document.getElementById('agAnalysis').innerHTML = expertHTML.join("");
+            } else {
+                expBlock.style.display = "none";
+            }
+
+            const resArea = document.getElementById('resultArea');
+            resArea.style.display = "block";
+            resArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // باز و بسته کردن پنجره تفسیر بالینی
+        function openInterpretModal() {
+            if (!currentInterpretation) return;
+            const container = document.getElementById('modalContent');
+            let html = [];
+
+            // ۱. تفسیر آنیون گپ
+            if (currentInterpretation.corr_ag !== null) {
+                const ag = currentInterpretation.corr_ag;
+                if (ag > 12) {
+                    html.push(`
+                        <div class="alert-card warning">
+                            <h4>🧪 شکاف آنیونی بالا (${ag.toFixed(1)})</h4>
+                            اسیدهای نسنجیده پاتولوژیک وارد گردش خون شده‌اند (تجمع کتون‌ها، لاکتات، سموم یا نارسایی کلیه). هرچه این عدد از ۱۲ بالاتر باشد، بار اسیدوز شدیدتر است.
+                        </div>
+                    `);
+                } else {
+                    html.push(`
+                        <div class="alert-card info">
+                            <h4>🧪 شکاف آنیونی طبیعی (${ag.toFixed(1)})</h4>
+                            شکاف آنیونی در محدوده طبیعی است (۸ تا ۱۲). در صورت افت بیکربنات، منشأ آن اتلاف گوارشی (اسهال) یا ترشح کلیوی (RTA / مصرف نرمال سالین) است.
+                        </div>
+                    `);
+                }
+            }
+
+            // ۲. تفسیر نسبت دلتا
+            if (currentInterpretation.delta_ratio !== null) {
+                const dr = currentInterpretation.delta_ratio;
+                let drTitle = "";
+                let drDesc = "";
+                if (dr < 0.4) {
+                    drTitle = "اسیدوز متابولیک گپ نرمال خالص (NAGMA)";
+                    drDesc = "افت بیکربنات خیلی بیشتر از افزایش آنیون گپ است.";
+                } else if (dr <= 0.8) {
+                    drTitle = "اختلال مختلط (HAGMA + NAGMA)";
+                    drDesc = "بیمار همزمان دچار تجمع اسیدهای نسنجیده (مثل کتون) و اتلاف بیکربنات (مثل اسهال یا سالین زیاد) است.";
+                } else if (dr <= 2.0) {
+                    drTitle = "HAGMA خالص (Pure HAGMA)";
+                    drDesc = "افزایش گپ دقیقاً معادل کاهش بیکربنات است. نشان‌دهنده کتواسیدوز خالص دیابتی (DKA)، لاکتیک اسیدوز یا مسمومیت دارویی بدون اختلال پنهان ثانویه.";
+                } else {
+                    drTitle = "HAGMA همراه با آلکالوز متابولیک نهفته";
+                    drDesc = "بیکربنات بیشتر از حد انتظار است؛ احتمالاً بیمار همزمان دچار استفراغ شدید، ساکشن معده یا مصرف دیورتیک بوده است.";
+                }
+                html.push(`
+                    <div class="alert-card info">
+                        <h4>⚖️ نسبت دلتا (${dr.toFixed(2)}): ${drTitle}</h4>
+                        ${drDesc}
+                    </div>
+                `);
+            }
+
+            // ۳. هشدار حیاتی پتاسیم
+            if (currentInterpretation.corr_k !== null) {
+                const k = currentInterpretation.corr_k;
+                if (k < 3.0) {
+                    html.push(`
+                        <div class="alert-card">
+                            <h4 style="color: var(--danger-color);">⚠️ هشدار مرگبار: هیپوکالمی شدید مخفی (${k.toFixed(2)} mEq/L)</h4>
+                            اسیدوز خونی با شیفت پتاسیم به خارج سلول، مقدار آن را کاذب بالا نشان می‌دهد. ذخیره واقعی بدن به شدت تهی شده است. <b>خطر فیبریلاسیون بطنی و ایست قلبی با شروع انسولین پیش از اصلاح پتاسیم وجود دارد.</b>
+                        </div>
+                    `);
+                } else if (k > 5.5) {
+                    html.push(`
+                        <div class="alert-card warning">
+                            <h4>⚠️ هایپرکالمی حقیقی (${k.toFixed(2)} mEq/L)</h4>
+                            پتاسیم تصحیح‌شده بیمار بالاتر از حد نرمال است؛ ریتم قلبی و ECG باید دقیق مانیتور شود.
+                        </div>
+                    `);
+                } else {
+                    html.push(`
+                        <div class="alert-card info">
+                            <h4>🧬 پتاسیم اصلاح‌شده با pH (${k.toFixed(2)} mEq/L)</h4>
+                            سطح پتاسیم تصحیح‌شده در محدوده پایدار و طبیعی است.
+                        </div>
+                    `);
+                }
+            }
+
+            // ۴. هشدار سدیم و اسمولاریته
+            if (currentInterpretation.corr_na !== null) {
+                const na = currentInterpretation.corr_na;
+                if (na > 155) {
+                    html.push(`
+                        <div class="alert-card warning">
+                            <h4>💧 وضعیت هایپراسمولار شدید (${na.toFixed(1)} mEq/L)</h4>
+                            سدیم اصلاح‌شده با قند نشان می‌دهد هایپوگلیسمی باعث رقیق شدن کاذب خون شده و بدن بیمار دچار کم‌آبی شدید بافتی و هایپراسمولاریته بحرانی است. اصلاح سرم باید آهسته و کنترل‌شده انجام شود تا از ادم مغزی پیشگیری گردد.
+                        </div>
+                    `);
+                } else {
+                    html.push(`
+                        <div class="alert-card info">
+                            <h4>🧂 سدیم اصلاح‌شده با قند (${na.toFixed(1)} mEq/L)</h4>
+                            اثر اسموتیک گلوکز بر رقت سرمی سدیم با موفقیت تصحیح گردید.
+                        </div>
+                    `);
+                }
+            }
+
+            container.innerHTML = html.join("");
+            document.getElementById('interpretModal').classList.add('active');
+        }
+
+        function closeInterpretModal(e) {
+            document.getElementById('interpretModal').classList.remove('active');
+        }
+    </script>
+</body>
+</html>
